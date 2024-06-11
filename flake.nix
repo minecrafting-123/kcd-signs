@@ -1,39 +1,40 @@
 {
-  "nodes": {
-    "nixpkgs": {
-      "locked": {
-        "lastModified": 0,
-        "narHash": "sha256-WKm9CvgCldeIVvRz87iOMi8CFVB1apJlkUT4GGvA0iM=",
-        "path": "/nix/store/yy5l09gfsagkv8rswblknmsjc2gyr20d-source",
-        "type": "path"
-      },
-      "original": {
-        "id": "nixpkgs",
-        "type": "indirect"
-      }
-    },
-    "root": {
-      "inputs": {
-        "nixpkgs": "nixpkgs",
-        "systems": "systems"
-      }
-    },
-    "systems": {
-      "locked": {
-        "lastModified": 1681028828,
-        "narHash": "sha256-Vy1rq5AaRuLzOxct8nz4T6wlgyUR7zLU309k9mBC768=",
-        "owner": "nix-systems",
-        "repo": "default",
-        "rev": "da67096a3b9bf56a91d16901293e51ba5b49a27e",
-        "type": "github"
-      },
-      "original": {
-        "owner": "nix-systems",
-        "repo": "default",
-        "type": "github"
-      }
-    }
-  },
-  "root": "root",
-  "version": 7
+  inputs = {
+    # nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    systems.url = "github:nix-systems/default";
+  };
+
+  outputs =
+    { systems
+    , nixpkgs
+    , ...
+    } @ inputs:
+    let
+      eachSystem = f:
+        nixpkgs.lib.genAttrs (import systems) (
+          system:
+          f nixpkgs.legacyPackages.${system}
+        );
+    in
+    {
+      devShells = eachSystem (pkgs: {
+        default = (pkgs.buildFHSEnv {
+          name = "dev env";
+          targetPkgs = pkgs: (with pkgs; [
+            bun
+            nodejs_20
+            nodePackages.pnpm
+            nodePackages.typescript
+            nodePackages.typescript-language-server
+            bashInteractive
+
+            chromium
+          ]);
+
+          profile = ''
+             export PUPPETEER_EXECUTABLE_PATH=${pkgs.chromium}/bin/chromium
+          '';
+        }).env;
+      });
+    };
 }
