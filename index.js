@@ -35,9 +35,11 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 var munkres = require('munkres-js');
-var COOKIE = '__RequestVerificationToken_OnSuite=UGy23pcP-IG2Hp0780eTBmYMvHOjduEG-RrPYrlMCWWLC7qxpBOkMLIn4UVKmKGQG6SzG2yQ5dvpJ0KNBwPjPGS9kxLagbpRGzjqXaFkjPc1; __RequestVerificationToken_OnSuite_TokenId=9f3dccca-d7e5-420d-ad81-ba09bcf134b6; ck=a=+RMOokPN1rM=; bridge=action=create&src=api&xdb=false; sd=70f336e8-bd32-4034-8068-f605c99c9747; persona=student; t=ae84fc09-7a29-0fe4-01ec-6a789a8d90fd; userDataSessionID=3efb4f81-64d3-4c7f-bf68-e8b73d475fdb%7C19c333c2-6cf3-46c5-ace6-90ee31e13943; AuthSvcToken=l40jlegyRef4aDbC4dAJIIol7f0OazLUgURlnnQ4UO8Jvrq7%2B36pJ3pklbKVXPe8sO36EjPqTzd7HAy4yxVGkrrAoOIPrgwJEZ7k4wTFzKcpFqHSksbGBrGYpRjjqU%2FQzt1TsLO7lyNpG8Y%2F4sse0hCkN0SEhGEPYE9wjim%2F9jomti2QRHWU2l98rPvHZkXwIjpfD1OFKvl6rbQAwQ1dJQ0RA5yBfNd2f7c8g4ETTUBhJO5kn%2BkSwQ13eevoifkmuEJ3duRF9hCpHUe9KCTVhOn8EbALAv39y4zeyrPfWcI%2FkySDwx1gHhkUuq3xtnjIcs77cYlyn%2BcL9LWLX3GBxw%3D%3D.H4sIAAAAAAAAA51STZOaQBDVfJTJbqqS3JMqDzlGPgQRrUolqxCWVQSRddWLNTKDTBZmkAG%2Ffn0geMghlYNTM3OYfv1e95t%2BUavVPt4lSYR9kGFKhpQ%2BY1Sv1Wu3RUQLsyzp8zzzQxQDxh3jiFGQcDTd8gfGtwWhwxcbQ0QynJ14PwI4ZjwBMareAozSL1BQVNhTuy0fQtSSFdBt9dBGaMlIDlTo9xSp%2FUexXhtcp1dgcQQgTBFjnzYp3oYZdw4R2f5gWV5iuWcfliSVygeT6WXGkJIApzGCr7w0v1Tw%2FboKtniPSNl24x7QGJOL0rfr2FiellyvV2UPFdNNiFm8M7VJumroJKCpfyn47ZhuMdFAhm7ErqgKktQRpUvOcOb%2BXHv2SJ94tu8p0dQ29vPE8neOLs1XoXAUD2BgQmtimI5nECPAA3ykj4K4H013epLolnLW0b5rsnR8iBfDID3MqE1Vd2GSSUu7qMwK14vJWZvQOzuS0x3ZS206dc92EIzX4ycQnu4Hj5q9jD33YT4cag7qpc5yabi6O4CdJ%2BEgyopMjTDILbgJ7jp5ns%2Fi9fTXdIQXATtXKu%2BqwdRo8XHkfXwqHKU0AknC%2BTSuILcuIugAor%2B8UOVuuwqWq7xfFue%2FXA0OM5Yj%2BNmi5GtTFJoPOWm2hbbcFJV%2BR%2B5LYtOwvDccOia4mLcKVkT%2FCfsNATDOql4DAAA%3D';
+var COOKIE = '__RequestVerificationToken_OnSuite=eoatCsEIXHivWH13OgHrkNv0JI-A-xkz8_QWF_vc5_o77ZiGatXwvCoNm7BLKIk4jv2o-DEhK9URuKENot38aqJkidUd4Pcsaq3rm2hv7MQ1; __RequestVerificationToken_OnSuite_TokenId=e40bc564-4ddc-4d0b-8aeb-a3bf7cacbe2c; ck=a=+RMOokPN1rM=; bridge=action=create&src=api&xdb=false; sd=3e0cb558-514c-4ccb-ab75-3c54ce014417; persona=student; t=20f515c5-bffb-51af-4457-a562406f0e28; userDataSessionID=4fcf21ee-addc-4fa5-a3f7-f3529bb08d8a%7Cebe47558-eec4-495d-82ff-62e94a4b46ce; AuthSvcToken=RNGZjDie4w%2BlmMQNXNH8lSZnT5CMc60amvsFbzoESkUtE8W%2BxJSfT%2Bw0uyd5ILKH7Mqsugi7X9KxB5LNi5HmrpbbQc102SLlawx5DdwjPloHdRR%2B093V9aObVDKxUv4ODHy7HFiqeZXzDPrHJczjzQ2BBfIr5GJWb7cwHK8Ysxa9OL6bbxWlkAFOi94aY81bsvlBEP3zlkAirkvNKirDg4OrZzxKE9dE8fnmZD8lMgEkqwwTBy4RYHO3lff5565tAy4aruE5DU9JSjULYRWw%2FWdONK17qZCy6nr%2BNJKbAH2er%2BPFR%2B4DiUs%2FjoFPapoCirCYcmDbeAGDDm0%2Bvqf6zw%3D%3D.H4sIAAAAAAAAA51SSY%2FaMBSGLqKdqdT23kocemxWAkmQqhZCWAcYIAzLBZnYgIfYzsQO269v0nDooeoBy%2FbB71vee36vcrnc51oYBtgHAjPqMLbHKJ%2FL5%2B6TSGMnRFhVFO7vEAFcPpGAMxDKLNoqR67oqlpWko0hogKLs%2BIHABOuUEBQ9rbBKPoG1YoFbcuUfAiRZFSAKdlorUoGMjYW9O1KSf%2FjmM%2FVb%2FNLsDgAEEaI8y%2FrCG93Qr7sEN3%2B4iJOsfLeh6lI5vKpw92U4TC6wRFB8I0XxdcMft6WwRYfEE3LLrQBI5henX7cpsbjKNV6u0xryJTudpiTl05jEC0LLt2wyL8m%2FP6BbTFtAIHuNFOzNN0sq9aV40zGzZU37LkDzzrBEujZlUfKBJ8sJpfurLafHjSHrS1P9Y3T0%2FlJN5x5NOgNHTxBphj5tSnU24fK4bl51OeMxERdvIQDDyT8w0Yn%2FavLJOl6MjmrDvTGxqBZHz2Kkjse63N1ai73%2B%2BW53onWg2kbzU7SJe6a%2Fcaz9DBqbcvEXa%2BOi%2FF5Lnq41ez17eVqZi0vQb%2FThjaWhq6IXOda%2F4dsMBss%2BTj6kZyTjjIWgDCUfUYyyP0YUXQEwV%2B9sEslMwumK71fJ%2Be%2FWgUZcx4j%2BNWL0feiphW7MS3qqm4UNauqWtWyWWz1vXcyOoU4mbcMppf%2FDfsN7k%2FhtF4DAAA%3D';
 var TWELFTH_FACET = "9536_Twelfth Grade";
 var ELEVENTH_FACET = "9536_Eleventh Grade";
+var KCD_LONG = -85.6689;
+var KCD_LAT = 38.2423;
 function getDistanceFromLatLonInMi(lat1, lon1, lat2, lon2) {
     var R = 3959; // Radius of the earth in miles
     var dLat = deg2rad(lat2 - lat1); // deg2rad below
@@ -78,21 +80,64 @@ function fetchGrade(facet) {
         console.log(e);
     });
 }
-function calculate() {
+function findOutliers() {
     return __awaiter(this, void 0, void 0, function () {
-        var juniors, seniors, distMatrix;
+        var _a, juniors, seniors, outliers, i, student, i, student;
+        return __generator(this, function (_b) {
+            switch (_b.label) {
+                case 0: return [4 /*yield*/, getData()];
+                case 1:
+                    _a = _b.sent(), juniors = _a[0], seniors = _a[1];
+                    outliers = [];
+                    for (i = 0; i < Object.keys(juniors).length; i++) {
+                        student = juniors[i];
+                        //if long or lat is more than 20 deg from KCD, smth is very wrong
+                        if (getDistanceFromLatLonInMi(student['lat'], student['long'], KCD_LAT, KCD_LONG) > 20) {
+                            outliers.push(student.name);
+                        }
+                        //the above code should also catch any null islanders
+                    }
+                    ;
+                    for (i = 0; i < Object.keys(seniors).length; i++) {
+                        student = seniors[i];
+                        if (getDistanceFromLatLonInMi(student['lat'], student['long'], KCD_LAT, KCD_LONG) > 20) {
+                            outliers.push(student.name);
+                        }
+                    }
+                    ;
+                    return [2 /*return*/, outliers];
+            }
+        });
+    });
+}
+function getData() {
+    return __awaiter(this, void 0, void 0, function () {
+        var juniors, seniors;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0: return [4 /*yield*/, fetchGrade(ELEVENTH_FACET)];
                 case 1:
                     juniors = (_a.sent()).map(function (it) {
                         return ({ name: "".concat(it.FirstName, " ").concat(it.LastName), lat: it.PreferredAddressLat, long: it.PreferredAddressLng });
-                    }).filter(function (person) { return person.lat !== 0 && person.lng !== 0; });
+                    });
                     return [4 /*yield*/, fetchGrade(TWELFTH_FACET)];
                 case 2:
                     seniors = (_a.sent()).map(function (it) {
                         return ({ name: "".concat(it.FirstName, " ").concat(it.LastName), lat: it.PreferredAddressLat, long: it.PreferredAddressLng });
-                    }).filter(function (person) { return person.lat !== 0 && person.lng !== 0; });
+                    });
+                    return [2 /*return*/, [juniors, seniors]];
+            }
+        });
+    });
+}
+function calculate() {
+    return __awaiter(this, void 0, void 0, function () {
+        var _a, juniors, seniors, distMatrix;
+        return __generator(this, function (_b) {
+            switch (_b.label) {
+                case 0: return [4 /*yield*/, getData()];
+                case 1:
+                    _a = _b.sent(), juniors = _a[0], seniors = _a[1];
                     distMatrix = juniors.map(function (j) {
                         return seniors.map(function (s) {
                             return getDistanceFromLatLonInMi(j.lat, j.long, s.lat, s.long);
@@ -110,4 +155,7 @@ function calculate() {
         });
     });
 }
+findOutliers().then(function (res) {
+    return console.log(res);
+});
 module.exports.calculate = calculate;

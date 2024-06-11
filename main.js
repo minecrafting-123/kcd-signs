@@ -17,7 +17,6 @@ async function handleCalculate (event){
   return final;
 }
 
-
 const createWindow = () => {
     const win = new BrowserWindow({
       width: 800,
