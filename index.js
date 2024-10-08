@@ -34,8 +34,9 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var _this = this;
 var munkres = require('munkres-js');
-var COOKIE = '__RequestVerificationToken_OnSuite=olWg39nYbdhzDyqlW78IBz7b2qhGhE2G7Fc9gA_YvTj_8jN3onUCePY993LrdhlxKkP04H3WCrqHFQ2xygq4ujgRe4tr9uVHiUOFmrgqZjo1; __RequestVerificationToken_OnSuite_TokenId=dd38310f-7388-4f48-b62f-9ce5e52349c6; _ga=GA1.1.2071638245.1726591871; ck=a=+RMOokPN1rM=; bridge=action=create&src=api&xdb=false; t=561e4068-fc87-78d7-bc55-7d699355110f; sd=d6f5bb5a-5a65-4e7f-8ef7-f49293f93bc4; persona=student; _ga_GBR1P7H50V=GS1.1.1726591871.1.1.1726591927.0.0.0; userDataSessionID=e363191b-5696-470e-bd53-6be130d31148%7Cc30abfa1-cbc4-4d5e-b38f-b31c40da30cc; AuthSvcToken=cYY%2Fex7b8eEdy7fCsDq85LbroxJszKSSElL%2BfLrjZjDtASBnlT%2FPLzlVqr6mysxXwNLVvQ%2BlPwrZbGG%2BO40Ew4bVyTUWPkJD2BAKgAkWmu%2F4ezryXraMRpCionoSn%2FMHFSg199E%2Fb09PEux0C41KrpZ2g3N4QAAdAPATNWzGWBjg7HQpTMyhcPGwcsyiLcVPeknNhPuP8gV1Ai5378Ll8UDvo%2B0zxRwtU8vcrsjHPwouqpxUyjQReN5HnB38oou8wLfwSsapPa95h5cs0GSKZasL3FquWvgSVtwetPv2sWOYHBAyyMxUc0bu%2FfE%2B0n4K9iqV5pF0vdOJwy7i8KM0Wg%3D%3D.H4sIAAAAAAAAA51Sya7TMBRNGfSgIAF7kLpgScZmrISgw%2Bs8Ny08NpVf7DR%2BSWw3Tjp9PQnpBiGxqGV74XvuOfce32eCIHxoMhZhD6SYkjalIUYVoSJU80gnSFPWkGXuBSgGXDrFEaeASTTZyUcua4piyPnGEJEUp2fZiwCOuUxAjMo3H6PkM1RMGzq2JXoQIlE3gSU66FERdaT7NvQcs679UawIrdv0ciyOAIQJ4vzjY4J3QSpdAkR233maFVgp9GBBUqq8H%2FD7IqNNiY%2BTGMEXbpJdK%2Fh2WwU7fECkaPuuD2iMyVXp621sPEsKrpe%2Fih5KptdjusOkA1JUVS3NNBzV0eplqNpeLbtbdza6n7oL7%2BHgT%2BZDE3Z5sDa0eNnjZLS2zH5%2F41%2FMdhKoKNwPpuzCtuSy6q2zH7PhojVL5m1u1jEYb%2Fddz3ATZ0kJXvR6jANwVVnl5uYDsh1A10yj8Oga5KEJ7AV0cIA7od01nL0daK1IS0JmwO1lw%2BZjK8ziVnOQ2edpdPp5jibiZjwM2wf0JD7NGF1Gup4c2Igrfqnytpy%2FDs3%2Fh7yLz7lxlEaAMcmjcQl5s0QEHUH0txd2GSxWcT%2FPz3%2B57iTMeYbgJzdDX2qqVVshVtMUTa%2BpZsPQGopd603cVxI6MZyPVQlT1NrMS%2F%2BF%2FQZtq2k6RQMAAA%3D%3D';
+var COOKIE = '__RequestVerificationToken_OnSuite=sTPrdBLGjSVASHp1BAvuydD0jYCjrRWAxKfuj5-QmhqILnVbOhg5KH9lNkq_RFOROIY6EqUcPaM4jJXVJhFqr1QGctCqi3E8femRxGewHXs1; __RequestVerificationToken_OnSuite_TokenId=cca5e046-19e3-4102-9dbd-1ef1767ee32e; _ga=GA1.1.553677966.1728414925; ck=a=+RMOokPN1rM=; bridge=action=create&src=api&xdb=false; t=fbe950e4-7911-84e2-ee0c-2ce2b1e5eadc; sd=e3cf8bc0-6e00-40b4-958a-2525dda711aa; persona=student; _ga_GBR1P7H50V=GS1.1.1728414924.1.1.1728414966.0.0.0; userDataSessionID=feb6bced-dfc4-433b-99ec-7f101c2e7a0a%7C216659c9-7e84-4b82-848f-6ec4eb3186c0; AuthSvcToken=cYS%2FmOEP59HaCw1v3r0UMAgs3G3VkEP35avW9RyuTidgV5NP8g2oP6EvUwb7vC%2F4S0Pb4cLZcFl4ovuSGB1bgA1OU%2BXTHeXAGjvQzTIvyOSn0GhiFpfFR9QJrb6JJ99EmKLAmgH97TpoeabSQdVM7DqtNrZtcRP0mDfM3mtLqTeo974p73MEW4ZK0X1jdDW%2Fde14%2BCdFccoaBbIofpiu%2FSGbQGtZyKm1ZCl9SEuNLZ8kUa%2BQdy8jSgh1Q37xkb9SiBBBwNLJcsvz1iTsA0TBnBZJoSITGME937zvIlqbQHbrVftadC10PLP74aCofEXr%2BkHzV5FxyuGdTcGM%2BYlnxQ%3D%3D.H4sIAAAAAAAAA51STY%2FaMBAN%2FdC2tFLb%2B1bi0GPJFyEkSFULCUshS2lJyO5yWRnbSbwksRsnsPTX12m4VKp6wLJ98Lx5b%2BZ5nkiS9G7EWEogKAnNHUp3BLekltQWETcpSzZUFA4TnAEuP2Ypp4DJtIiVA1d0Ve0rYhOE85KURwWmgGRcyUGGm7eI4OIDUk0L2dagCxHCXcMEg66Nt2rXwEZkIWibPf2PYksan6cnsCQFCBWY88ttQeKklH8lOI%2B%2F8LKqsfIOopqkUXk745M6w6F5RIoMo2dBUZ0q%2BHxeBTHZ47xu%2B%2BIroBnJT0qfzmPjVVFzPd%2FUPTRML69pTHIXlLitDXTLEJmG3YTajr%2B6ug%2BW3uRboM2PDCLc30bTeTb14sCaLKuC%2Btcs5DdJz1mkleemfKKF4V2YrjdW5N1tR%2FbVPp0b2s99ML6h4W7s58F4GmUM%2BHZyc3tS8YW5YkDuZyh46KlhQtfuD%2FDddOY9j1SDUeBNPYtZleGUZuD33XW1cGJtA9yJeTDCbeWFdIWMBxhqi5lVQtq%2FjUIWCqd2czTTN7BRed3Mn0vF%2F%2BRvsqMwjtIUMCZDmjWQVyuc4wNI%2F%2FLCtJpgver7qTj%2F5bqQCecVRu%2BDCn%2FsqFZnCcuOrupGR%2BsPNXOoDjrTRfBCxo%2BMiLFqYLr%2Bb9hvmDkZKEUDAAA%3D';
 var TWELFTH_FACET = "9536_Twelfth Grade";
 var ELEVENTH_FACET = "9536_Eleventh Grade";
 var KCD_LONG = -85.6689;
@@ -67,7 +68,7 @@ function fetchGrade(facet) {
             "sec-fetch-dest": "empty",
             "sec-fetch-mode": "cors",
             "sec-fetch-site": "same-origin",
-            "wh-version": "2024.04.22.3",
+            "wh-version": "2024.10.07.1",
             "x-requested-with": "XMLHttpRequest",
             "cookie": COOKIE,
             "Referer": "https://kcd.myschoolapp.com/app/student",
@@ -155,4 +156,17 @@ function calculate() {
         });
     });
 }
+(function () { return __awaiter(_this, void 0, void 0, function () {
+    var _a, _b;
+    return __generator(this, function (_c) {
+        switch (_c.label) {
+            case 0:
+                _b = (_a = console).log;
+                return [4 /*yield*/, calculate()];
+            case 1:
+                _b.apply(_a, [_c.sent()]);
+                return [2 /*return*/];
+        }
+    });
+}); })();
 module.exports.calculate = calculate;
