@@ -34,21 +34,114 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-var _this = this;
 /* TODO:
-    Setup API for travel distance
-      IF need coords, Setup API to convert address line --> coords (stop spoofing yourself)
-    Google sheets API to access addresses
+    Google sheets API - make it dynamic length :D
     Figure out the deal with missing addresses and proper procedure after graduation
     Situations with excess students in either groupS
     
 */
 var munkres = require('munkres-js');
-var COOKIE = '__RequestVerificationToken_OnSuite=tHpP8AwFqgtRt90joYPIabdwzsQKkFf4DjOdIlsvoDDbXz6FN3zxzKutkoqHaryISZYaNXQ9aFKX29kIfUObLlnEAbu6T97QKV0EATidQyw1; __RequestVerificationToken_OnSuite_TokenId=f537bc36-837d-45b3-b867-3b94382103d5; _ga=GA1.1.846810904.1729177443; ck=a=+RMOokPN1rM=; bridge=action=create&src=api&xdb=false; t=4e6678e4-d4e3-4197-b9bd-bd2cdbc9c1b8; sd=757c93b7-bce1-4112-9ea0-4f678e92e067; persona=student; _ga_GBR1P7H50V=GS1.1.1729177443.1.1.1729177466.0.0.0; userDataSessionID=34350cfe-82ea-4e1f-a2f5-033c3df74c9f%7C2e01e1b9-edc3-41f0-9a6f-9a3d47dfba7d; AuthSvcToken=ExZHtrp7MQjPmwJxNo8Uf%2B3go6YhaLapT3O6TJmPJqFmrg%2FHac2%2FSouRzkT837HSb1AW50AxZ1h2ojxxERWADMOQe%2FOg2FQBE9BWBDTHz1QChe%2BUCYGL4kLw%2FblHeOaYb4Dwii3jFCCgRnYDiUVm1MIrcpjM8rAeEtkZgFAkH32eOp%2FAuoBUUGBvjuHkGe%2Fv3dixhfIbMXD%2BHtf%2Fvf8QpuOgt9prYqNIOworV7vWLgGEUZE3Y2OaibgjtY3t1r3jgCUtgYxennIIzunGncsxtQrTU9uE4UmpQOtkh8BHMm%2BsyzTdWULu5v5nLKGt%2BVb6Dl6stKAdAjEUUNCvw7e%2FDg%3D%3D.H4sIAAAAAAAAA51STY%2FaMBAN%2FdC2tFLb%2B1bi0GPJNwlBqtoNWT4aCA1kdyUuyBs7iZfEDrEDC7%2B%2BScOlUtUDlu2D5817M8%2FzQhCETzd5nuIQcEzJkNItRi2hJbSriJNwng8kiYUJygATn7OUUZCLtIilA5NUWe5J1cYQEY75UQpTgDMmEZCh5i3CqPgCZaMPrb7ZDSFEXd0AZtdCj3JXR3rUh6FlaOofxZZgX6ZXYXEKICwQY9ePBY4TLp4SROIfjJc1VtyGsCZpVD5O2W2dMaQkwkWG4KugKM8VfL%2BsghjvEanbvpoAmmFyVvp2GRsri5rr9bruoWF6O6MxJg7gqK2YqqWYpm5oTag9XC1Hm2Dh3nrBaWc%2B3EV%2Bgn4lxCnXu3JjuIkV2Iwdk8TWe6ONq96R42jmBspKHZqO52VLL%2FQO%2Btq3krkH%2BZ5qM86eFmFkPWhTW51tziqrytxqQDZTGNjOyJhAXdmfijHsBy7y8z57UuDc6IGtrqXcID%2BLXQntm9EB9LJx0VsH8f2koPyYQsv3%2FcXK8ZYacPl99KCoxjrDq0blfTN%2FDq3%2Bh3zIjpVxlKYgz8WQZg3k3RIRdADp316YTbBe9f2yOv%2FluhIxYyWCn4Ok%2FNpRzM4i5B1VVvWO0hvI%2BkA1OuN58EZEzzmuxqqBacq%2FYb8BSQfVp0UDAAA%3D';
-var TWELFTH_FACET = "9536_Twelfth Grade";
-var ELEVENTH_FACET = "9536_Eleventh Grade";
+var fs = require('fs').promises;
+var path = require('path');
+var process = require('process');
+var authenticate = require('@google-cloud/local-auth').authenticate;
+var google = require('googleapis').google;
+process.loadEnvFile('.env');
 var KCD_LONG = -85.6689;
 var KCD_LAT = 38.2423;
+// If modifying these scopes, delete token.json.
+var SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly'];
+// The file token.json stores the user's access and refresh tokens, and is
+// created automatically when the authorization flow completes for the first
+// time.
+var TOKEN_PATH = path.join(process.cwd(), 'token.json');
+var CREDENTIALS_PATH = path.join(process.cwd(), 'credentials.json');
+/**
+ * Reads previously authorized credentials from the save file.
+ *
+ * @return {Promise<OAuth2Client|null>}
+ */
+function loadSavedCredentialsIfExist() {
+    return __awaiter(this, void 0, void 0, function () {
+        var content, credentials, err_1;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    _a.trys.push([0, 2, , 3]);
+                    return [4 /*yield*/, fs.readFile(TOKEN_PATH)];
+                case 1:
+                    content = _a.sent();
+                    credentials = JSON.parse(content);
+                    return [2 /*return*/, google.auth.fromJSON(credentials)];
+                case 2:
+                    err_1 = _a.sent();
+                    return [2 /*return*/, null];
+                case 3: return [2 /*return*/];
+            }
+        });
+    });
+}
+/**
+ * Serializes credentials to a file compatible with GoogleAuth.fromJSON.
+ *
+ * @param {OAuth2Client} client
+ * @return {Promise<void>}
+ */
+function saveCredentials(client) {
+    return __awaiter(this, void 0, void 0, function () {
+        var content, keys, key, payload;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0: return [4 /*yield*/, fs.readFile(CREDENTIALS_PATH)];
+                case 1:
+                    content = _a.sent();
+                    keys = JSON.parse(content);
+                    key = keys.installed || keys.web;
+                    payload = JSON.stringify({
+                        type: 'authorized_user',
+                        client_id: key.client_id,
+                        client_secret: key.client_secret,
+                        refresh_token: client.credentials.refresh_token,
+                    });
+                    return [4 /*yield*/, fs.writeFile(TOKEN_PATH, payload)];
+                case 2:
+                    _a.sent();
+                    return [2 /*return*/];
+            }
+        });
+    });
+}
+/**
+ * Load or request or authorization to call APIs.
+ *
+ */
+function authorize() {
+    return __awaiter(this, void 0, void 0, function () {
+        var client;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0: return [4 /*yield*/, loadSavedCredentialsIfExist()];
+                case 1:
+                    client = _a.sent();
+                    if (client) {
+                        return [2 /*return*/, client];
+                    }
+                    return [4 /*yield*/, authenticate({
+                            scopes: SCOPES,
+                            keyfilePath: CREDENTIALS_PATH,
+                        })];
+                case 2:
+                    client = _a.sent();
+                    if (!client.credentials) return [3 /*break*/, 4];
+                    return [4 /*yield*/, saveCredentials(client)];
+                case 3:
+                    _a.sent();
+                    _a.label = 4;
+                case 4: return [2 /*return*/, client];
+            }
+        });
+    });
+}
 function getDistanceFromLatLonInMi(lat1, lon1, lat2, lon2) {
     var R = 3959; // Radius of the earth in miles
     var dLat = deg2rad(lat2 - lat1); // deg2rad below
@@ -62,32 +155,6 @@ function getDistanceFromLatLonInMi(lat1, lon1, lat2, lon2) {
 }
 function deg2rad(deg) {
     return deg * (Math.PI / 180);
-}
-function fetchGrade(facet) {
-    // encode and fetch
-    facet = encodeURIComponent(facet);
-    return fetch("https://kcd.myschoolapp.com/api/directory/directoryresultsget?directoryId=1879&searchVal=&facets=".concat(facet, "&searchAll=false"), {
-        "headers": {
-            "accept": "application/json, text/javascript, */*; q=0.01",
-            "accept-language": "en-US,en;q=0.9",
-            "sec-ch-ua": "\"Chromium\";v=\"122\", \"Not(A:Brand\";v=\"24\", \"Google Chrome\";v=\"122\"",
-            "sec-ch-ua-mobile": "?0",
-            "sec-ch-ua-platform": "\"Linux\"",
-            "sec-fetch-dest": "empty",
-            "sec-fetch-mode": "cors",
-            "sec-fetch-site": "same-origin",
-            "wh-version": "2024.10.07.1",
-            "x-requested-with": "XMLHttpRequest",
-            "cookie": COOKIE,
-            "Referer": "https://kcd.myschoolapp.com/app/student",
-            "Referrer-Policy": "strict-origin-when-cross-origin"
-        },
-        "body": null,
-        "method": "GET"
-    }).then(function (res) { return res.json(); })
-        .catch(function (e) {
-        console.log(e);
-    });
 }
 function findOutliers() {
     return __awaiter(this, void 0, void 0, function () {
@@ -119,23 +186,165 @@ function findOutliers() {
         });
     });
 }
-function getData() {
+function geocode(row) {
     return __awaiter(this, void 0, void 0, function () {
-        var juniors, seniors;
+        var address, poboxpattern, mapResponse, mapJson;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, fetchGrade(ELEVENTH_FACET)];
+                case 0:
+                    address = row[3];
+                    poboxpattern = /P.?O\.?\sbox\s[1-9]+/ig;
+                    if (poboxpattern.test(address)) {
+                        address = row[6].concat(" post office");
+                    }
+                    return [4 /*yield*/, fetch("https://api.mapbox.com/search/geocode/v6/forward?q=".concat(encodeURIComponent(address), "&bbox=").concat(KCD_LONG - 1, ",").concat(KCD_LAT - 1, ",").concat(KCD_LONG + 1, ",").concat(KCD_LAT + 1, "&access_token=").concat(process.env.MAPBOX_TOKEN))];
                 case 1:
-                    juniors = (_a.sent()).map(function (it) {
-                        return ({ name: "".concat(it.FirstName, " ").concat(it.LastName), lat: it.PreferredAddressLat, long: it.PreferredAddressLng });
-                    });
-                    return [4 /*yield*/, fetchGrade(TWELFTH_FACET)];
+                    mapResponse = _a.sent();
+                    return [4 /*yield*/, mapResponse.json()];
                 case 2:
-                    seniors = (_a.sent()).map(function (it) {
-                        return ({ name: "".concat(it.FirstName, " ").concat(it.LastName), lat: it.PreferredAddressLat, long: it.PreferredAddressLng });
-                    });
-                    return [2 /*return*/, [juniors, seniors]];
+                    mapJson = _a.sent();
+                    //console.log(mapJson["features"][0]["geometry"]["coordinates"])
+                    return [2 /*return*/, [mapJson["features"][0]["geometry"]["coordinates"][0], mapJson["features"][0]["geometry"]["coordinates"][1]]];
             }
+        });
+    });
+}
+function processCoords(array) {
+    return __awaiter(this, void 0, void 0, function () {
+        var promises, results;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    promises = array.map(function (address) { return geocode(address); });
+                    return [4 /*yield*/, Promise.all(promises)];
+                case 1:
+                    results = _a.sent();
+                    return [2 /*return*/, results];
+            }
+        });
+    });
+}
+function formatCoords(array, juniors, seniors) {
+    var inputStr = Array();
+    var juniorGroups = Math.ceil(juniors / 25);
+    var seniorGroups = Math.ceil(seniors / 25);
+    //senior data hopefully
+    // for (let i = 0; i < seniorGroups; i++) {
+    //   let coordstr = ""
+    //   //if it's the last group, go until the end, which is less than 25 entries
+    //   if (i+1 == seniorGroups){
+    //     //console.log(coordstr)
+    //     for (let j = i*25; j < array.length; j++){
+    //       //console.log("HERE!" + array[j][0].toString())
+    //       coordstr = coordstr.concat(`${array[j][0].toString()},${array[j][1].toString()};`)
+    //     }
+    //     inputStr.push(coordstr.slice(0,-1))
+    //     break
+    //   }
+    //   for (let j = 0; j < 25; j++) {
+    //     coordstr = coordstr.concat(`${array[i*25 + j][0].toString()},${array[i*25 + j][1].toString()};`)
+    //   }
+    //   inputStr.push(coordstr.slice(0,-1))
+    //   //console.log('coordstring gaming: ' + coordstr)
+    // }
+    for (var i = 0; i < juniorGroups; i++) {
+        var coordstr = "";
+        //if it's the last group, go until the end, which is less than 25 entries
+        if (i + 1 == juniorGroups) {
+            //console.log(coordstr)
+            for (var j = i * 25; j < array.length - seniors; j++) {
+                console.log("HERE! ".concat(array[j + seniors - 1][0].toString(), " numbero: ").concat(j + seniors - 1, " total: ").concat(array.length));
+                coordstr = coordstr.concat("".concat(array[j + seniors][0].toString(), ",").concat(array[j + seniors][1].toString(), ";"));
+            }
+            inputStr.push(coordstr.slice(0, -1));
+            break;
+        }
+        for (var j = 0; j < 25; j++) {
+            coordstr = coordstr.concat("".concat(array[i * 25 + j + seniors][0].toString(), ",").concat(array[i * 25 + j + seniors][1].toString(), ";"));
+        }
+        inputStr.push(coordstr.slice(0, -1));
+        //console.log('coordstring gaming: ' + coordstr)
+    }
+    console.log(inputStr.length);
+    return inputStr;
+}
+/**
+ * Prints the names and majors of students in a sample spreadsheet:
+ * @see https://docs.google.com/spreadsheets/d/11pqF5CR_JDkNYcRgDsrFiIqKvbvjYCvbJ-GIP7I9izY
+ * @param {google.auth.OAuth2} auth The authenticated Google OAuth client.
+ */
+function listAddresses(auth) {
+    return __awaiter(this, void 0, void 0, function () {
+        var sheets, res, rows, addresses, problems, juniorCount, seniorCount, prevYear, isSenior, rawCoords, coordinateStrings;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    sheets = google.sheets({ version: 'v4', auth: auth });
+                    return [4 /*yield*/, sheets.spreadsheets.values.get({
+                            //test spreadsheet ID: 1XtZwd1i4ih5OFrQdv747OCMiDOc8889iV3DD4_KMLg4
+                            //real ID: 11pqF5CR_JDkNYcRgDsrFiIqKvbvjYCvbJ-GIP7I9izY
+                            spreadsheetId: '11pqF5CR_JDkNYcRgDsrFiIqKvbvjYCvbJ-GIP7I9izY',
+                            range: 'Data Import!A2:L160',
+                        })];
+                case 1:
+                    res = _a.sent();
+                    rows = res.data.values;
+                    if (!rows || rows.length === 0) {
+                        console.log('No data found.');
+                        return [2 /*return*/];
+                    }
+                    console.log('Name, Address:');
+                    addresses = Array();
+                    problems = Array();
+                    juniorCount = 0;
+                    seniorCount = 0;
+                    prevYear = null;
+                    isSenior = true;
+                    rows.forEach(function (row) {
+                        //set year for juniors at beginning
+                        if (prevYear == null) {
+                            prevYear = row[2];
+                        }
+                        if (prevYear != row[2]) {
+                            isSenior = false;
+                        }
+                        prevYear = row[2];
+                        var address = row[3];
+                        // TODO: store the problem addresses for later so manual input is ballin
+                        // IMPORTANT: counts don't include the people with problem addresses
+                        if (address != undefined && (address.length > 1)) {
+                            if (isSenior) {
+                                seniorCount += 1;
+                            }
+                            else {
+                                juniorCount += 1;
+                            }
+                            addresses.push(row);
+                        }
+                        else {
+                            problems.push(row);
+                        }
+                    });
+                    return [4 /*yield*/, processCoords(addresses)];
+                case 2:
+                    rawCoords = _a.sent();
+                    console.log("lat, long:");
+                    console.log(rawCoords);
+                    console.log('first raw coord: ' + rawCoords[0]);
+                    console.log("Juniors ".concat(juniorCount, ", Seniors ").concat(seniorCount));
+                    console.log("first junior hopefully ".concat(rawCoords[addresses.length - 1]));
+                    coordinateStrings = formatCoords(rawCoords, juniorCount, seniorCount);
+                    console.log(coordinateStrings);
+                    return [2 /*return*/];
+            }
+        });
+    });
+}
+;
+function drivingDistCalc(juniors, seniors) {
+    return __awaiter(this, void 0, void 0, function () {
+        return __generator(this, function (_a) {
+            return [2 /*return*/];
         });
     });
 }
@@ -164,17 +373,11 @@ function calculate() {
         });
     });
 }
-(function () { return __awaiter(_this, void 0, void 0, function () {
-    var _a, _b;
-    return __generator(this, function (_c) {
-        switch (_c.label) {
-            case 0:
-                _b = (_a = console).log;
-                return [4 /*yield*/, calculate()];
-            case 1:
-                _b.apply(_a, [_c.sent()]);
-                return [2 /*return*/];
-        }
-    });
-}); })();
+authorize().then(listAddresses).catch(console.error);
+/*
+(async () => {
+  console.log(await calculate())
+})();
+
 module.exports.calculate = calculate;
+*/ 

@@ -1,7 +1,5 @@
 /* TODO:
-    Setup API for travel distance 
-      IF need coords, Setup API to convert address line --> coords (stop spoofing yourself)
-    Google sheets API to access addresses
+    Google sheets API - make it dynamic length :D
     Figure out the deal with missing addresses and proper procedure after graduation
     Situations with excess students in either groupS
     
@@ -79,8 +77,6 @@ async function authorize() {
   return client;
 }
 
-\\
-
 function getDistanceFromLatLonInMi(lat1, lon1, lat2, lon2) {
   var R = 3959; // Radius of the earth in miles
   var dLat = deg2rad(lat2-lat1);  // deg2rad below
@@ -121,7 +117,8 @@ async function findOutliers() {
 
 async function geocode(row) {
   var address = row[3]
-  if (address.includes("P.O.")){
+  const poboxpattern = /P.?O\.?\sbox\s[1-9]+/ig
+  if (poboxpattern.test(address)){
     address = row[6].concat(" post office")
   }
   //const response = await limiter.schedule(() => fetch(`https://nominatim.openstreetmap.org/search?addressdetails=0&q=${address.replaceAll(" ","+")}+Kentucky&format=jsonv2&limit=1&viewbox=${KCD_LONG-1},${KCD_LAT-1},${KCD_LONG+1},${KCD_LAT+1}&bounded=1`));
@@ -129,7 +126,7 @@ async function geocode(row) {
   //not on openstreetmap.org, we try MapBox
   const mapResponse = await fetch(`https://api.mapbox.com/search/geocode/v6/forward?q=${encodeURIComponent(address)}&bbox=${KCD_LONG-1},${KCD_LAT-1},${KCD_LONG+1},${KCD_LAT+1}&access_token=${process.env.MAPBOX_TOKEN}`)
   const mapJson = await mapResponse.json();
-  console.log(mapJson["features"][0]["geometry"]["coordinates"])
+  //console.log(mapJson["features"][0]["geometry"]["coordinates"])
   return [mapJson["features"][0]["geometry"]["coordinates"][0], mapJson["features"][0]["geometry"]["coordinates"][1]]
 }
 
@@ -143,40 +140,60 @@ function formatCoords(array, juniors, seniors){
   let inputStr = Array<string>()
   const juniorGroups = Math.ceil(juniors / 25)
   const seniorGroups = Math.ceil(seniors / 25)
-  //handling junior data
+  //senior data hopefully
+  // for (let i = 0; i < seniorGroups; i++) {
+  //   let coordstr = ""
+  //   //if it's the last group, go until the end, which is less than 25 entries
+  //   if (i+1 == seniorGroups){
+  //     //console.log(coordstr)
+  //     for (let j = i*25; j < array.length; j++){
+  //       //console.log("HERE!" + array[j][0].toString())
+  //       coordstr = coordstr.concat(`${array[j][0].toString()},${array[j][1].toString()};`)
+  //     }
+  //     inputStr.push(coordstr.slice(0,-1))
+  //     break
+  //   }
+  //   for (let j = 0; j < 25; j++) {
+  //     coordstr = coordstr.concat(`${array[i*25 + j][0].toString()},${array[i*25 + j][1].toString()};`)
+  //   }
+  //   inputStr.push(coordstr.slice(0,-1))
+  //   //console.log('coordstring gaming: ' + coordstr)
+  // }
   for (let i = 0; i < juniorGroups; i++) {
     let coordstr = ""
     //if it's the last group, go until the end, which is less than 25 entries
     if (i+1 == juniorGroups){
       //console.log(coordstr)
-      for (let j = i*25; j < array.length; j++){
-        //console.log("HERE!" + array[j][0].toString())
-        coordstr = coordstr.concat(`${array[j][0].toString()},${array[j][1].toString()};`)
+      for (let j = i*25; j < array.length-seniors; j++){
+        console.log(`HERE! ${array[j+seniors-1][0].toString()} numbero: ${j+seniors-1} total: ${array.length}`)
+        coordstr = coordstr.concat(`${array[j+seniors][0].toString()},${array[j+seniors][1].toString()};`)
       }
       inputStr.push(coordstr.slice(0,-1))
       break
     }
     for (let j = 0; j < 25; j++) {
-      coordstr = coordstr.concat(`${array[i*25 + j][0].toString()},${array[i*25 + j][1].toString()};`)
+      coordstr = coordstr.concat(`${array[i*25 + j + seniors][0].toString()},${array[i*25 + j + seniors][1].toString()};`)
     }
     inputStr.push(coordstr.slice(0,-1))
     //console.log('coordstring gaming: ' + coordstr)
   }
-  console.log(inputStr)
-  
+
+  console.log(inputStr.length)
   return inputStr
 }
 
 /**
  * Prints the names and majors of students in a sample spreadsheet:
- * @see https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit
+ * @see https://docs.google.com/spreadsheets/d/11pqF5CR_JDkNYcRgDsrFiIqKvbvjYCvbJ-GIP7I9izY
  * @param {google.auth.OAuth2} auth The authenticated Google OAuth client.
  */
 async function listAddresses(auth) {
   const sheets = google.sheets({version: 'v4', auth});
   const res = await sheets.spreadsheets.values.get({
-    spreadsheetId: '1XtZwd1i4ih5OFrQdv747OCMiDOc8889iV3DD4_KMLg4',
-    range: 'Data Import!A2:L30',
+    //test spreadsheet ID: 1XtZwd1i4ih5OFrQdv747OCMiDOc8889iV3DD4_KMLg4
+    //real ID: 11pqF5CR_JDkNYcRgDsrFiIqKvbvjYCvbJ-GIP7I9izY
+    spreadsheetId: '11pqF5CR_JDkNYcRgDsrFiIqKvbvjYCvbJ-GIP7I9izY',
+    range: 'Data Import!A2:L160',
   });
   const rows = res.data.values;
   if (!rows || rows.length === 0) {
@@ -191,7 +208,7 @@ async function listAddresses(auth) {
   let juniorCount = 0
   let seniorCount = 0
   let prevYear = null
-  let isSenior = false
+  let isSenior = true
 
   rows.forEach((row) => {
     //set year for juniors at beginning
@@ -200,13 +217,13 @@ async function listAddresses(auth) {
     }
 
     if (prevYear != row[2]){
-      isSenior = true
+      isSenior = false
     }
     prevYear = row[2]
 
     const address = row[3]
     // TODO: store the problem addresses for later so manual input is ballin
-    // IMPORTANT: counts don't include the people 
+    // IMPORTANT: counts don't include the people with problem addresses
     if (address != undefined && (address.length > 1)){
       if (isSenior){
         seniorCount += 1
@@ -219,17 +236,20 @@ async function listAddresses(auth) {
     }
   });
   //console.log(addresses);
-  
   const rawCoords = await processCoords(addresses)
   console.log("lat, long:")
   console.log(rawCoords)
   console.log('first raw coord: ' + rawCoords[0])
   console.log(`Juniors ${juniorCount}, Seniors ${seniorCount}`)
+  console.log(`first junior hopefully ${rawCoords[addresses.length-1]}`)
   
   const coordinateStrings = formatCoords(rawCoords, juniorCount, seniorCount)
   console.log(coordinateStrings)
-
 };
+
+async function drivingDistCalc(juniors, seniors) {
+
+}
 
 async function calculate() {
   let [juniors, seniors] = await getData()
@@ -247,8 +267,10 @@ async function calculate() {
 }
 
 authorize().then(listAddresses).catch(console.error);
+/*
 (async () => {
   console.log(await calculate())
 })();
 
 module.exports.calculate = calculate;
+*/
