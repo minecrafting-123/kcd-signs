@@ -224,49 +224,56 @@ function processCoords(array) {
         });
     });
 }
+//Mapbox API accepts 25 coordinates TOTAL, which means I can do 24 sources/1 destination when requesting distances. 
+//I'll do groups of 24 juniors, so that I can easily request with the API, and just list out all the senior coordinates
 function formatCoords(array, juniors, seniors) {
-    var inputStr = Array();
-    var juniorGroups = Math.ceil(juniors / 25);
-    var seniorGroups = Math.ceil(seniors / 25);
-    //senior data hopefully
-    // for (let i = 0; i < seniorGroups; i++) {
-    //   let coordstr = ""
-    //   //if it's the last group, go until the end, which is less than 25 entries
-    //   if (i+1 == seniorGroups){
-    //     //console.log(coordstr)
-    //     for (let j = i*25; j < array.length; j++){
-    //       //console.log("HERE!" + array[j][0].toString())
-    //       coordstr = coordstr.concat(`${array[j][0].toString()},${array[j][1].toString()};`)
-    //     }
-    //     inputStr.push(coordstr.slice(0,-1))
-    //     break
-    //   }
-    //   for (let j = 0; j < 25; j++) {
-    //     coordstr = coordstr.concat(`${array[i*25 + j][0].toString()},${array[i*25 + j][1].toString()};`)
-    //   }
-    //   inputStr.push(coordstr.slice(0,-1))
-    //   //console.log('coordstring gaming: ' + coordstr)
-    // }
+    var seniorStr = Array();
+    var juniorStr = Array();
+    var juniorGroups = Math.ceil(juniors / 24);
+    var seniorGroups = Math.ceil(seniors / 24);
+    //senior data hopefully - will just be normal list
+    var coordstr = "";
+    for (var j = 0; j < seniors; j++) {
+        //console.log("HERE!" + array[j][0].toString())
+        coordstr = coordstr.concat("".concat(array[j][0].toString(), ",").concat(array[j][1].toString(), ";"));
+    }
+    seniorStr.push(coordstr.slice(0, -1));
     for (var i = 0; i < juniorGroups; i++) {
-        var coordstr = "";
-        //if it's the last group, go until the end, which is less than 25 entries
+        var coordstr_1 = "";
+        //if it's the last group, go until the end, which is less than 24 entries
         if (i + 1 == juniorGroups) {
             //console.log(coordstr)
-            for (var j = i * 25; j < array.length - seniors; j++) {
-                console.log("HERE! ".concat(array[j + seniors - 1][0].toString(), " numbero: ").concat(j + seniors - 1, " total: ").concat(array.length));
-                coordstr = coordstr.concat("".concat(array[j + seniors][0].toString(), ",").concat(array[j + seniors][1].toString(), ";"));
+            for (var j = i * 24; j < array.length - seniors; j++) {
+                //console.log(`HERE! ${array[j+seniors-1][0].toString()} numbero: ${j+seniors-1} total: ${array.length}`)
+                coordstr_1 = coordstr_1.concat("".concat(array[j + seniors][0].toString(), ",").concat(array[j + seniors][1].toString(), ";"));
             }
-            inputStr.push(coordstr.slice(0, -1));
+            juniorStr.push(coordstr_1.slice(0, -1));
             break;
         }
-        for (var j = 0; j < 25; j++) {
-            coordstr = coordstr.concat("".concat(array[i * 25 + j + seniors][0].toString(), ",").concat(array[i * 25 + j + seniors][1].toString(), ";"));
+        for (var j = 0; j < 24; j++) {
+            coordstr_1 = coordstr_1.concat("".concat(array[i * 24 + j + seniors][0].toString(), ",").concat(array[i * 24 + j + seniors][1].toString(), ";"));
         }
-        inputStr.push(coordstr.slice(0, -1));
+        juniorStr.push(coordstr_1.slice(0, -1));
         //console.log('coordstring gaming: ' + coordstr)
     }
-    console.log(inputStr.length);
-    return inputStr;
+    return [seniorStr, juniorStr];
+}
+//input strings of junior and senior 
+//output array of distances between the juniors and seniors
+function drivingDistCalc(juniors, seniors, juniorCount, seniorCount) {
+    return __awaiter(this, void 0, void 0, function () {
+        var distMatrix;
+        return __generator(this, function (_a) {
+            distMatrix = Array(juniorCount).fill(0).map(function () { return Array(seniorCount).fill(-1); });
+            // for (let i = 0; i < juniors.length; i++){
+            //   for (let j = 0; j < seniors.length; j++){
+            //     const response = fetch(`https://api.mapbox.com/directions-matrix/v1/mapbox/driving/${coordinates}?annotations=distance,duration&access_token=${process.env.MAPBOX_TOKEN}`)
+            //   }
+            // }
+            console.log(distMatrix.length, distMatrix[0].length);
+            return [2 /*return*/];
+        });
+    });
 }
 /**
  * Prints the names and majors of students in a sample spreadsheet:
@@ -275,7 +282,7 @@ function formatCoords(array, juniors, seniors) {
  */
 function listAddresses(auth) {
     return __awaiter(this, void 0, void 0, function () {
-        var sheets, res, rows, addresses, problems, juniorCount, seniorCount, prevYear, isSenior, rawCoords, coordinateStrings;
+        var sheets, res, rows, addresses, problems, juniorCount, seniorCount, prevYear, isSenior, rawCoords, coordinateStrings, distanceArray;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -325,54 +332,44 @@ function listAddresses(auth) {
                             problems.push(row);
                         }
                     });
-                    return [4 /*yield*/, processCoords(addresses)];
+                    return [4 /*yield*/, processCoords(addresses)
+                        //console.log("lat, long:")
+                        //console.log(rawCoords)
+                        //console.log('first raw coord: ' + rawCoords[0])
+                    ];
                 case 2:
                     rawCoords = _a.sent();
-                    console.log("lat, long:");
-                    console.log(rawCoords);
-                    console.log('first raw coord: ' + rawCoords[0]);
+                    //console.log("lat, long:")
+                    //console.log(rawCoords)
+                    //console.log('first raw coord: ' + rawCoords[0])
                     console.log("Juniors ".concat(juniorCount, ", Seniors ").concat(seniorCount));
-                    console.log("first junior hopefully ".concat(rawCoords[addresses.length - 1]));
+                    console.log("first junior hopefully ".concat(rawCoords[addresses.length - juniorCount]));
                     coordinateStrings = formatCoords(rawCoords, juniorCount, seniorCount);
                     console.log(coordinateStrings);
+                    return [4 /*yield*/, drivingDistCalc(coordinateStrings[1], coordinateStrings[0], juniorCount, seniorCount)
+                        //format: [seniorStr, juniorStr]
+                    ];
+                case 3:
+                    distanceArray = _a.sent();
                     return [2 /*return*/];
             }
         });
     });
 }
 ;
-function drivingDistCalc(juniors, seniors) {
-    return __awaiter(this, void 0, void 0, function () {
-        return __generator(this, function (_a) {
-            return [2 /*return*/];
-        });
-    });
-}
-function calculate() {
-    return __awaiter(this, void 0, void 0, function () {
-        var _a, juniors, seniors, distMatrix;
-        return __generator(this, function (_b) {
-            switch (_b.label) {
-                case 0: return [4 /*yield*/, getData()];
-                case 1:
-                    _a = _b.sent(), juniors = _a[0], seniors = _a[1];
-                    distMatrix = juniors.map(function (j) {
-                        return seniors.map(function (s) {
-                            return getDistanceFromLatLonInMi(j.lat, j.long, s.lat, s.long);
-                        });
-                    });
-                    return [2 /*return*/, munkres(distMatrix).map(function (_a) {
-                            var idx1 = _a[0], idx2 = _a[1];
-                            return ({
-                                person1: juniors[idx1].name,
-                                person2: seniors[idx2].name,
-                                dist: getDistanceFromLatLonInMi(juniors[idx1].lat, juniors[idx1].long, seniors[idx2].lat, seniors[idx2].long)
-                            });
-                        })];
-            }
-        });
-    });
-}
+// async function calculate() {
+//   let [juniors, seniors] = await getData()
+//   const distMatrix = juniors.map(j => {
+//       return seniors.map(s => {
+//           return getDistanceFromLatLonInMi(j.lat, j.long, s.lat, s.long)
+//       })
+//   })
+//   return munkres(distMatrix).map(([idx1, idx2]) => ({
+//       person1: juniors[idx1].name,
+//       person2: seniors[idx2].name,
+//       dist: getDistanceFromLatLonInMi(juniors[idx1].lat, juniors[idx1].long, seniors[idx2].lat, seniors[idx2].long)
+//   }))
+// }
 authorize().then(listAddresses).catch(console.error);
 /*
 (async () => {

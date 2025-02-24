@@ -136,50 +136,54 @@ async function processCoords(array){
   return results
 }
 
+//Mapbox API accepts 25 coordinates TOTAL, which means I can do 24 sources/1 destination when requesting distances. 
+//I'll do groups of 24 juniors, so that I can easily request with the API, and just list out all the senior coordinates
 function formatCoords(array, juniors, seniors){
-  let inputStr = Array<string>()
-  const juniorGroups = Math.ceil(juniors / 25)
-  const seniorGroups = Math.ceil(seniors / 25)
-  //senior data hopefully
-  // for (let i = 0; i < seniorGroups; i++) {
-  //   let coordstr = ""
-  //   //if it's the last group, go until the end, which is less than 25 entries
-  //   if (i+1 == seniorGroups){
-  //     //console.log(coordstr)
-  //     for (let j = i*25; j < array.length; j++){
-  //       //console.log("HERE!" + array[j][0].toString())
-  //       coordstr = coordstr.concat(`${array[j][0].toString()},${array[j][1].toString()};`)
-  //     }
-  //     inputStr.push(coordstr.slice(0,-1))
-  //     break
-  //   }
-  //   for (let j = 0; j < 25; j++) {
-  //     coordstr = coordstr.concat(`${array[i*25 + j][0].toString()},${array[i*25 + j][1].toString()};`)
-  //   }
-  //   inputStr.push(coordstr.slice(0,-1))
-  //   //console.log('coordstring gaming: ' + coordstr)
-  // }
+  let seniorStr = Array<string>()
+  let juniorStr = Array<string>()
+  const juniorGroups = Math.ceil(juniors / 24)
+  //senior data hopefully - will just be normal list
+  let coordstr = ""
+  for (let j = 0; j < seniors; j++){
+    //console.log("HERE!" + array[j][0].toString())
+    coordstr = coordstr.concat(`${array[j][0].toString()},${array[j][1].toString()};`)
+  }
+  seniorStr.push(coordstr.slice(0,-1))
+
   for (let i = 0; i < juniorGroups; i++) {
     let coordstr = ""
-    //if it's the last group, go until the end, which is less than 25 entries
+    //if it's the last group, go until the end, which is less than 24 entries
     if (i+1 == juniorGroups){
       //console.log(coordstr)
-      for (let j = i*25; j < array.length-seniors; j++){
-        console.log(`HERE! ${array[j+seniors-1][0].toString()} numbero: ${j+seniors-1} total: ${array.length}`)
+      for (let j = i*24; j < array.length-seniors; j++){
+        //console.log(`HERE! ${array[j+seniors-1][0].toString()} numbero: ${j+seniors-1} total: ${array.length}`)
         coordstr = coordstr.concat(`${array[j+seniors][0].toString()},${array[j+seniors][1].toString()};`)
       }
-      inputStr.push(coordstr.slice(0,-1))
+      juniorStr.push(coordstr.slice(0,-1))
       break
     }
-    for (let j = 0; j < 25; j++) {
-      coordstr = coordstr.concat(`${array[i*25 + j + seniors][0].toString()},${array[i*25 + j + seniors][1].toString()};`)
+    for (let j = 0; j < 24; j++) {
+      coordstr = coordstr.concat(`${array[i*24 + j + seniors][0].toString()},${array[i*24 + j + seniors][1].toString()};`)
     }
-    inputStr.push(coordstr.slice(0,-1))
+    juniorStr.push(coordstr.slice(0,-1))
     //console.log('coordstring gaming: ' + coordstr)
   }
 
-  console.log(inputStr.length)
-  return inputStr
+  return [seniorStr, juniorStr]
+}
+
+//input strings of junior and senior 
+//output array of distances between the juniors and seniors
+async function drivingDistCalc(juniors: string[], seniors: string[], juniorCount: number, seniorCount: number) {
+  let distMatrix = Array(juniorCount).fill(0).map(() => Array(seniorCount).fill(-1))
+  // for (let i = 0; i < juniors.length; i++){
+  //   for (let j = 0; j < seniors.length; j++){
+  //     const response = fetch(`https://api.mapbox.com/directions-matrix/v1/mapbox/driving/${coordinates}?annotations=distance,duration&access_token=${process.env.MAPBOX_TOKEN}`)
+
+  //   }
+  // }
+
+  console.log(distMatrix.length, distMatrix[0].length)
 }
 
 /**
@@ -195,6 +199,7 @@ async function listAddresses(auth) {
     spreadsheetId: '11pqF5CR_JDkNYcRgDsrFiIqKvbvjYCvbJ-GIP7I9izY',
     range: 'Data Import!A2:L160',
   });
+  //seniors, then juniors is spreadsheet format
   const rows = res.data.values;
   if (!rows || rows.length === 0) {
     console.log('No data found.');
@@ -237,34 +242,34 @@ async function listAddresses(auth) {
   });
   //console.log(addresses);
   const rawCoords = await processCoords(addresses)
-  console.log("lat, long:")
-  console.log(rawCoords)
-  console.log('first raw coord: ' + rawCoords[0])
+  //console.log("lat, long:")
+  //console.log(rawCoords)
+  //console.log('first raw coord: ' + rawCoords[0])
   console.log(`Juniors ${juniorCount}, Seniors ${seniorCount}`)
-  console.log(`first junior hopefully ${rawCoords[addresses.length-1]}`)
+  console.log(`first junior hopefully ${rawCoords[addresses.length-juniorCount]}`)
   
   const coordinateStrings = formatCoords(rawCoords, juniorCount, seniorCount)
   console.log(coordinateStrings)
+  const distanceArray = await drivingDistCalc(coordinateStrings[1],coordinateStrings[0],juniorCount,seniorCount)
+  //format: [seniorStr, juniorStr]
+
 };
 
-async function drivingDistCalc(juniors, seniors) {
 
-}
-
-async function calculate() {
-  let [juniors, seniors] = await getData()
-  const distMatrix = juniors.map(j => {
-      return seniors.map(s => {
-          return getDistanceFromLatLonInMi(j.lat, j.long, s.lat, s.long)
-      })
-  })
+// async function calculate() {
+//   let [juniors, seniors] = await getData()
+//   const distMatrix = juniors.map(j => {
+//       return seniors.map(s => {
+//           return getDistanceFromLatLonInMi(j.lat, j.long, s.lat, s.long)
+//       })
+//   })
   
-  return munkres(distMatrix).map(([idx1, idx2]) => ({
-      person1: juniors[idx1].name,
-      person2: seniors[idx2].name,
-      dist: getDistanceFromLatLonInMi(juniors[idx1].lat, juniors[idx1].long, seniors[idx2].lat, seniors[idx2].long)
-  }))
-}
+//   return munkres(distMatrix).map(([idx1, idx2]) => ({
+//       person1: juniors[idx1].name,
+//       person2: seniors[idx2].name,
+//       dist: getDistanceFromLatLonInMi(juniors[idx1].lat, juniors[idx1].long, seniors[idx2].lat, seniors[idx2].long)
+//   }))
+// }
 
 authorize().then(listAddresses).catch(console.error);
 /*
