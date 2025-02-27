@@ -46,6 +46,11 @@ var path = require('path');
 var process = require('process');
 var authenticate = require('@google-cloud/local-auth').authenticate;
 var google = require('googleapis').google;
+var Bottleneck = require("bottleneck/es5");
+//this will hopefully go away when program is done
+var limiter = new Bottleneck({
+    minTime: 1000
+});
 process.loadEnvFile('.env');
 var KCD_LONG = -85.6689;
 var KCD_LAT = 38.2423;
@@ -230,7 +235,6 @@ function formatCoords(array, juniors, seniors) {
     var seniorStr = Array();
     var juniorStr = Array();
     var juniorGroups = Math.ceil(juniors / 24);
-    var seniorGroups = Math.ceil(seniors / 24);
     //senior data hopefully - will just be normal list
     var coordstr = "";
     for (var j = 0; j < seniors; j++) {
@@ -262,16 +266,65 @@ function formatCoords(array, juniors, seniors) {
 //output array of distances between the juniors and seniors
 function drivingDistCalc(juniors, seniors, juniorCount, seniorCount) {
     return __awaiter(this, void 0, void 0, function () {
-        var distMatrix;
+        var distMatrix, indSeniors, _loop_1, i;
         return __generator(this, function (_a) {
-            distMatrix = Array(juniorCount).fill(0).map(function () { return Array(seniorCount).fill(-1); });
-            // for (let i = 0; i < juniors.length; i++){
-            //   for (let j = 0; j < seniors.length; j++){
-            //     const response = fetch(`https://api.mapbox.com/directions-matrix/v1/mapbox/driving/${coordinates}?annotations=distance,duration&access_token=${process.env.MAPBOX_TOKEN}`)
-            //   }
-            // }
-            console.log(distMatrix.length, distMatrix[0].length);
-            return [2 /*return*/];
+            switch (_a.label) {
+                case 0:
+                    distMatrix = Array(seniorCount).fill(0).map(function () { return Array(juniorCount).fill(-1); });
+                    indSeniors = seniors[0].split(";");
+                    console.log(indSeniors);
+                    _loop_1 = function (i) {
+                        var _loop_2, j;
+                        return __generator(this, function (_b) {
+                            switch (_b.label) {
+                                case 0:
+                                    _loop_2 = function (j) {
+                                        var response, json, k;
+                                        return __generator(this, function (_c) {
+                                            switch (_c.label) {
+                                                case 0: return [4 /*yield*/, limiter.schedule(function () { return fetch("https://api.mapbox.com/directions-matrix/v1/mapbox/driving/".concat(indSeniors[i], ";").concat(juniors[j], "?sources=").concat(juniors[j].split(";").map(function (_, i) { return ++i; }).join(";"), "&destinations=0&annotations=distance,duration&access_token=").concat(process.env.MAPBOX_TOKEN)); })];
+                                                case 1:
+                                                    response = _c.sent();
+                                                    return [4 /*yield*/, response.json()];
+                                                case 2:
+                                                    json = _c.sent();
+                                                    console.log(i, j);
+                                                    //console.log(json)
+                                                    for (k = 0; k < json["distances"].length; k++) {
+                                                        distMatrix[i][k + j * 24] = json["distances"][k];
+                                                    }
+                                                    return [2 /*return*/];
+                                            }
+                                        });
+                                    };
+                                    j = 0;
+                                    _b.label = 1;
+                                case 1:
+                                    if (!(j < juniors.length)) return [3 /*break*/, 4];
+                                    return [5 /*yield**/, _loop_2(j)];
+                                case 2:
+                                    _b.sent();
+                                    _b.label = 3;
+                                case 3:
+                                    j++;
+                                    return [3 /*break*/, 1];
+                                case 4: return [2 /*return*/];
+                            }
+                        });
+                    };
+                    i = 0;
+                    _a.label = 1;
+                case 1:
+                    if (!(i < indSeniors.length)) return [3 /*break*/, 4];
+                    return [5 /*yield**/, _loop_1(i)];
+                case 2:
+                    _a.sent();
+                    _a.label = 3;
+                case 3:
+                    i++;
+                    return [3 /*break*/, 1];
+                case 4: return [2 /*return*/, distMatrix];
+            }
         });
     });
 }
@@ -282,7 +335,7 @@ function drivingDistCalc(juniors, seniors, juniorCount, seniorCount) {
  */
 function listAddresses(auth) {
     return __awaiter(this, void 0, void 0, function () {
-        var sheets, res, rows, addresses, problems, juniorCount, seniorCount, prevYear, isSenior, rawCoords, coordinateStrings, distanceArray;
+        var sheets, res, rows, addresses, problems, juniorCount, seniorCount, prevYear, isSenior, seniorNames, juniorNames, rawCoords, coordinateStrings, distanceArray, paired;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -307,6 +360,8 @@ function listAddresses(auth) {
                     seniorCount = 0;
                     prevYear = null;
                     isSenior = true;
+                    seniorNames = Array();
+                    juniorNames = Array();
                     rows.forEach(function (row) {
                         //set year for juniors at beginning
                         if (prevYear == null) {
@@ -322,9 +377,11 @@ function listAddresses(auth) {
                         if (address != undefined && (address.length > 1)) {
                             if (isSenior) {
                                 seniorCount += 1;
+                                seniorNames.push("".concat(row[1], " ").concat(row[0]));
                             }
                             else {
                                 juniorCount += 1;
+                                juniorNames.push("".concat(row[1], " ").concat(row[0]));
                             }
                             addresses.push(row);
                         }
@@ -343,14 +400,20 @@ function listAddresses(auth) {
                     //console.log(rawCoords)
                     //console.log('first raw coord: ' + rawCoords[0])
                     console.log("Juniors ".concat(juniorCount, ", Seniors ").concat(seniorCount));
-                    console.log("first junior hopefully ".concat(rawCoords[addresses.length - juniorCount]));
                     coordinateStrings = formatCoords(rawCoords, juniorCount, seniorCount);
                     console.log(coordinateStrings);
-                    return [4 /*yield*/, drivingDistCalc(coordinateStrings[1], coordinateStrings[0], juniorCount, seniorCount)
-                        //format: [seniorStr, juniorStr]
-                    ];
+                    return [4 /*yield*/, drivingDistCalc(coordinateStrings[1], coordinateStrings[0], juniorCount, seniorCount)];
                 case 3:
                     distanceArray = _a.sent();
+                    paired = munkres(distanceArray).map(function (_a) {
+                        var idx1 = _a[0], idx2 = _a[1];
+                        return ({
+                            person1: seniorNames[idx1],
+                            person2: juniorNames[idx2],
+                            dist: distanceArray[idx1][idx2]
+                        });
+                    });
+                    console.log(paired);
                     return [2 /*return*/];
             }
         });

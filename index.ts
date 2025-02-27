@@ -10,6 +10,11 @@ const path = require('path');
 const process = require('process');
 const {authenticate} = require('@google-cloud/local-auth');
 const {google} = require('googleapis');
+const Bottleneck = require("bottleneck/es5");
+//this will hopefully go away when program is done
+const limiter = new Bottleneck({
+  minTime: 1000
+});
 
 process.loadEnvFile('.env');
 
@@ -175,15 +180,22 @@ function formatCoords(array, juniors, seniors){
 //input strings of junior and senior 
 //output array of distances between the juniors and seniors
 async function drivingDistCalc(juniors: string[], seniors: string[], juniorCount: number, seniorCount: number) {
-  let distMatrix = Array(juniorCount).fill(0).map(() => Array(seniorCount).fill(-1))
-  // for (let i = 0; i < juniors.length; i++){
-  //   for (let j = 0; j < seniors.length; j++){
-  //     const response = fetch(`https://api.mapbox.com/directions-matrix/v1/mapbox/driving/${coordinates}?annotations=distance,duration&access_token=${process.env.MAPBOX_TOKEN}`)
-
-  //   }
-  // }
-
-  console.log(distMatrix.length, distMatrix[0].length)
+  let distMatrix = Array(seniorCount).fill(0).map(() => Array(juniorCount).fill(-1))
+  const indSeniors = seniors[0].split(";")
+  console.log(indSeniors)
+  for (let i = 0; i < indSeniors.length; i++){
+    for (let j = 0; j < juniors.length; j++){
+      
+      const response = await limiter.schedule(() => fetch(`https://api.mapbox.com/directions-matrix/v1/mapbox/driving/${indSeniors[i]};${juniors[j]}?sources=${juniors[j].split(";").map((_, i) => ++i).join(";")}&destinations=0&annotations=distance,duration&access_token=${process.env.MAPBOX_TOKEN}`))
+      const json = await response.json()
+      console.log(i, j)
+      //console.log(json)
+      for (let k = 0; k < json["distances"].length; k++){
+        distMatrix[i][k + j*24] = json["distances"][k]
+      }
+    }
+  }
+  return distMatrix
 }
 
 /**
@@ -214,6 +226,8 @@ async function listAddresses(auth) {
   let seniorCount = 0
   let prevYear = null
   let isSenior = true
+  let seniorNames = Array<string>()
+  let juniorNames = Array<string>()
 
   rows.forEach((row) => {
     //set year for juniors at beginning
@@ -227,13 +241,16 @@ async function listAddresses(auth) {
     prevYear = row[2]
 
     const address = row[3]
+
     // TODO: store the problem addresses for later so manual input is ballin
     // IMPORTANT: counts don't include the people with problem addresses
     if (address != undefined && (address.length > 1)){
       if (isSenior){
         seniorCount += 1
+        seniorNames.push(`${row[1]} ${row[0]}`)
       } else {
         juniorCount += 1
+        juniorNames.push(`${row[1]} ${row[0]}`)
       }
       addresses.push(row)
     } else {
@@ -246,11 +263,16 @@ async function listAddresses(auth) {
   //console.log(rawCoords)
   //console.log('first raw coord: ' + rawCoords[0])
   console.log(`Juniors ${juniorCount}, Seniors ${seniorCount}`)
-  console.log(`first junior hopefully ${rawCoords[addresses.length-juniorCount]}`)
   
   const coordinateStrings = formatCoords(rawCoords, juniorCount, seniorCount)
   console.log(coordinateStrings)
   const distanceArray = await drivingDistCalc(coordinateStrings[1],coordinateStrings[0],juniorCount,seniorCount)
+  const paired = munkres(distanceArray).map(([idx1, idx2]) => ({
+          person1: seniorNames[idx1],
+          person2: juniorNames[idx2],
+          dist: distanceArray[idx1][idx2]
+      }))
+  console.log(paired)
   //format: [seniorStr, juniorStr]
 
 };
