@@ -344,7 +344,8 @@ function listAddresses(auth) {
                             //test spreadsheet ID: 1XtZwd1i4ih5OFrQdv747OCMiDOc8889iV3DD4_KMLg4
                             //real ID: 11pqF5CR_JDkNYcRgDsrFiIqKvbvjYCvbJ-GIP7I9izY
                             spreadsheetId: '11pqF5CR_JDkNYcRgDsrFiIqKvbvjYCvbJ-GIP7I9izY',
-                            range: 'Data Import!A2:L160',
+                            range: 'Data Import!A60:L80'
+                            //range: 'Data Import!A2:L160',
                         })];
                 case 1:
                     res = _a.sent();
@@ -434,10 +435,5 @@ function listAddresses(auth) {
 //   }))
 // }
 authorize().then(listAddresses).catch(console.error);
-/*
-(async () => {
-  console.log(await calculate())
-})();
-
-module.exports.calculate = calculate;
-*/ 
+module.exports.listAddresses = listAddresses;
+module.exports.authorize = authorize;

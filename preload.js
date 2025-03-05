@@ -4,7 +4,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   setTitle: (title) => ipcRenderer.send('set-title', title)
 })
 contextBridge.exposeInMainWorld('addressAPI', {
-  calculateRoutes: () => ipcRenderer.invoke('calculate')
+  calculateRoutes: () => ipcRenderer.invoke('listAddresses')
 
 })
 

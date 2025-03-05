@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain } = require('electron')
 const calculator = require('./index.js')
 const path = require('node:path')
+process.loadEnvFile('.env');
 
 function handleSetTitle (event, title) {
   const webContents = event.sender
@@ -9,10 +10,10 @@ function handleSetTitle (event, title) {
 }
 
 async function handleCalculate (event){
-  const result = await calculator.calculate();
+  const result = await calculator.authorize().then(calculator.listAddresses());
   let final = '';
   for (i = 0; i < result.length; i++){
-    final = final.concat(`${result[i]['person1']} & ${result[i]['person2']}, ${result[i]['dist']} miles\n`);
+    final = final.concat(`${result[i]['person1']} & ${result[i]['person2']}, ${result[i]['dist']} meters\n`);
   }
   return final;
 }
@@ -32,7 +33,7 @@ const createWindow = () => {
 app.whenReady().then(() => {
     createWindow()
     ipcMain.on('set-title', handleSetTitle)
-    ipcMain.handle('calculate', handleCalculate)
+    ipcMain.handle('listAddresses', handleCalculate)
 
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) createWindow()

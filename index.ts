@@ -185,7 +185,6 @@ async function drivingDistCalc(juniors: string[], seniors: string[], juniorCount
   console.log(indSeniors)
   for (let i = 0; i < indSeniors.length; i++){
     for (let j = 0; j < juniors.length; j++){
-      
       const response = await limiter.schedule(() => fetch(`https://api.mapbox.com/directions-matrix/v1/mapbox/driving/${indSeniors[i]};${juniors[j]}?sources=${juniors[j].split(";").map((_, i) => ++i).join(";")}&destinations=0&annotations=distance,duration&access_token=${process.env.MAPBOX_TOKEN}`))
       const json = await response.json()
       console.log(i, j)
@@ -209,7 +208,8 @@ async function listAddresses(auth) {
     //test spreadsheet ID: 1XtZwd1i4ih5OFrQdv747OCMiDOc8889iV3DD4_KMLg4
     //real ID: 11pqF5CR_JDkNYcRgDsrFiIqKvbvjYCvbJ-GIP7I9izY
     spreadsheetId: '11pqF5CR_JDkNYcRgDsrFiIqKvbvjYCvbJ-GIP7I9izY',
-    range: 'Data Import!A2:L160',
+    range: 'Data Import!A60:L80'
+    //range: 'Data Import!A2:L160',
   });
   //seniors, then juniors is spreadsheet format
   const rows = res.data.values;
@@ -294,10 +294,6 @@ async function listAddresses(auth) {
 // }
 
 authorize().then(listAddresses).catch(console.error);
-/*
-(async () => {
-  console.log(await calculate())
-})();
 
-module.exports.calculate = calculate;
-*/
+module.exports.listAddresses = listAddresses;
+module.exports.authorize = authorize;

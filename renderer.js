@@ -11,9 +11,3 @@ setButton.addEventListener('click', async () => {
   console.log('aaaaa')
   replacedText.innerHTML = result;
 });
-
-//ok now i need to 1. get COOKIE and 2. make this easy to copy-paste
-//oh and do the regression line thing with api
-
-//hi past me i'm lazy and i haven't done any update xdd get destroyed
-//your college app is going to be a lie
